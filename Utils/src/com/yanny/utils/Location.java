@@ -42,6 +42,28 @@ public class Location {
         return data;
     }
 
+    public long getUniverse() {
+        return universe;
+    }
+
+    @NotNull
+    public Point3L getGalaxyCluster() {
+        return galaxyCluster;
+    }
+
+    public int getGalaxy() {
+        return galaxy;
+    }
+
+    @NotNull
+    public Point3L getStarCluster() {
+        return starCluster;
+    }
+
+    public int getStar() {
+        return star;
+    }
+
     public static Location fromBytes(byte[] data) throws IOException {
         ByteArrayInputStream byteInputStream = new ByteArrayInputStream(data);
         DataInputStream dis = new DataInputStream(byteInputStream);

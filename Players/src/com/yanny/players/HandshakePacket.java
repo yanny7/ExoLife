@@ -4,9 +4,13 @@ import com.yanny.interfaces.ServerInterface;
 import com.yanny.utils.Location;
 import com.yanny.utils.Log;
 import com.yanny.utils.Module;
+import com.yanny.utils.Point3L;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class HandshakePacket extends Packet {
     private int clientVersion = -1;
@@ -65,7 +69,49 @@ public class HandshakePacket extends Packet {
         }
 
         if (success) {
-            Location location = server.getGame().findRandomLocation(); //TODO stored or new location
+            Statement statement = getPlayer().getStatement();
+            ResultSet resultSet;
+            Location location = null;
+
+            try {
+                resultSet = statement.executeQuery("SELECT * FROM players WHERE playerName = '" + playerName + "'");
+
+                if (resultSet.next()) {
+                    long universe = resultSet.getLong("universe");
+                    long gcx = resultSet.getLong("gcx");
+                    long gcy = resultSet.getLong("gcy");
+                    long gcz = resultSet.getLong("gcz");
+                    int galaxy = resultSet.getInt("galaxy");
+                    long scx = resultSet.getLong("scx");
+                    long scy = resultSet.getLong("scy");
+                    long scz = resultSet.getLong("scz");
+                    int star = resultSet.getInt("star");
+                    location = new Location(universe, new Point3L(gcx, gcy, gcz), galaxy, new Point3L(scx, scy, scz), star);
+                    Log.log(Module.PACKET).info("Location loaded from DB");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+            if (location == null) {
+                location = server.getGame().findRandomLocation();
+                Log.log(Module.PACKET).info("Found new location in universe");
+
+                try {
+                    if (!statement.execute("INSERT INTO players (playerName, universe, gcx, gcy, gcz, galaxy, scx, scy, scz, star) VALUES " +
+                            "('" + playerName + "', " + location.getUniverse() +
+                            ", " + location.getGalaxyCluster().x + ", " + location.getGalaxyCluster().y + ", " + location.getGalaxyCluster().z +
+                            ", " + location.getGalaxy() + ", " + location.getStarCluster().x + ", " + location.getStarCluster().y +
+                            ", " + location.getStarCluster().z + ", " + location.getStar() + ")")) {
+                        Log.log(Module.PACKET).warning("Insert was not successful");
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+
             Packet locationPacket = new LocationPacket(player, getInputStream());
             byte[] locationData;
 

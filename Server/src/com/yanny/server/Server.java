@@ -9,12 +9,14 @@ import com.yanny.interfaces.PlayersInterface;
 import com.yanny.interfaces.ServerInterface;
 import com.yanny.players.Players;
 
+import java.sql.SQLException;
+
 public class Server implements ServerInterface {
     @NotNull private final CommunicationInterface communication;
     @NotNull private final PlayersInterface players;
     @NotNull private final GameInterface game;
 
-    public Server() {
+    public Server() throws SQLException {
         communication = new Communication();
         players = new Players(this);
         game = new Game();

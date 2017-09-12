@@ -9,11 +9,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.UUID;
 
 class Player {
     @NotNull private final ServerInterface server;
     @NotNull private final Socket socket;
+    @NotNull private final Statement statement;
     @NotNull private final UUID uuid;
     @NotNull private PlayerState state = PlayerState.UNINITIALIZED;
 
@@ -21,9 +25,10 @@ class Player {
     @Nullable private Location location;
     private int clientVersion = -1;
 
-    Player(@NotNull Socket socket, @NotNull ServerInterface server) {
+    Player(@NotNull Socket socket, @NotNull ServerInterface server, @NotNull Connection connection) throws SQLException {
         this.socket = socket;
         this.server = server;
+        statement = connection.createStatement();
         this.uuid = UUID.nameUUIDFromBytes(socket.toString().getBytes());
     }
 
@@ -122,5 +127,10 @@ class Player {
     @NotNull
     Socket getSocket() {
         return socket;
+    }
+
+    @NotNull
+    public Statement getStatement() {
+        return statement;
     }
 }
